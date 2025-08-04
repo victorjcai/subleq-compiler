@@ -1,0 +1,2669 @@
+# Pi Benchmark for Subleq
+# Victor Cai, 08-89 intern 2023
+#
+# pi series from https://gitlab.cba.mit.edu/pub/pi/-/blob/master/pi.pdf
+# written in hsq subleq http://mazonka.com/subleq/hsq.html
+#
+# to run: save as name.asq and run "./hsq name.asq"
+#
+# features:
+#   function calling
+#   hexadecimal I/O (bypassing hsq's ascii)
+#   int mult/div functions (add/sub are trivial)
+#   float add/sub/mult/div functions
+#   rightshift function
+# 
+# it may be easier to read the individual function documentations first
+# before trying to read the main function itself
+# go to "##### arithmetic functions #####"
+#
+# note about floats:
+#   float representation here is done with three variables separating
+#     the sign, mantissa, and exponent of IEEE754 single-precision floats
+#     see https://en.wikipedia.org/wiki/Single-precision_floating-point_format
+#     the main difference is that the leading 1 is always included
+#     so 0x800000 <= mantissa <= 0xffffff
+#     actual pi is:
+#       s = 0x00000000
+#       m = 0x00c90fdb
+#       e = 0x00000080
+
+
+## main
+caller0:
+ni0
+
+## input number of terms
+# here's a deconstruction of the function calling
+# since this is the first time it's being used here
+
+# clear returned input variable
+i
+# replace return address (inret+2) of input
+# function with the address of retin0
+inret+2
+negretaddr
+retin0addr negretaddr
+negretaddr inret+2
+# jump to input function
+Z Z input
+
+# the variable holding retin0's address
+. retin0addr:retin0
+
+# returns here after execution
+retin0:
+i ni0
+N ni0
+
+
+# reset variable i
+vari
+
+# zero out pi
+pis  # sign
+pim  # mantissa
+pie  # exponent
+
+# loop for inputted number of iterations
+piloop:
+
+## how to pi! pseudocode
+## i++
+## floati = inttofloat(vari)
+## tmpf1 = floatadd(floati,-0.75)
+## tmpf2 = floatadd(floati,-0.25)
+## tmpf1 = floatmult(tmpf1, tmpf2)
+## tmpf1 = floatdiv(0.5, tmpf1)
+## pi = floatadd(pi, tmpf1)
+## repeat
+
+
+# increment variable i
+N vari
+
+
+## floati = inttofloat(vari)
+# call inttofloat
+vari tmp
+tmp iin
+tmp
+inttofloatret+2
+negretaddr
+retaddritf negretaddr
+negretaddr inttofloatret+2
+Z Z inttofloat
+. retaddritf:retitf
+retitf:
+
+
+## tmpf1 = floatadd(floati,-0.75)
+# call float add
+is tmp
+tmp xxs
+tmp
+im tmp
+tmp xxm
+tmp
+ie tmp
+tmp xxe
+tmp
+npsfs tmp # see -0.75, -0.25, and 0.5 representations under data section
+tmp yys
+tmp
+npsfm tmp
+tmp yym
+tmp
+npsfe tmp
+tmp yye
+tmp
+faddret+2
+negretaddr
+retaddrfa negretaddr
+negretaddr faddret+2
+Z Z fadd
+. retaddrfa:retfa
+retfa:
+tmpf1s
+zzs tmp
+tmp tmpf1s
+tmp
+tmpf1m
+zzm tmp
+tmp tmpf1m
+tmp
+tmpf1e
+zze tmp
+tmp tmpf1e
+tmp
+
+
+## tmpf2 = floatadd(floati,-0.25)
+# call float add
+is tmp
+tmp xxs
+tmp
+im tmp
+tmp xxm
+tmp
+ie tmp
+tmp xxe
+tmp
+nptfs tmp
+tmp yys
+tmp
+nptfm tmp
+tmp yym
+tmp
+nptfe tmp
+tmp yye
+tmp
+faddret+2
+negretaddr
+retaddrfa2 negretaddr
+negretaddr faddret+2
+Z Z fadd
+. retaddrfa2:retfa2
+retfa2:
+tmpf2s
+zzs tmp
+tmp tmpf2s
+tmp
+tmpf2m
+zzm tmp
+tmp tmpf2m
+tmp
+tmpf2e
+zze tmp
+tmp tmpf2e
+tmp
+
+
+## tmpf1 = floatmult(tmpf1, tmpf2)
+# call float multiply
+tmpf1s tmp
+tmp xs
+tmp
+tmpf1m tmp
+tmp xm
+tmp
+tmpf1e tmp
+tmp xe
+tmp
+tmpf2s tmp
+tmp ys
+tmp
+tmpf2m tmp
+tmp ym
+tmp
+tmpf2e tmp
+tmp ye
+tmp
+fmultret+2
+negretaddr
+retaddrfm negretaddr
+negretaddr fmultret+2
+Z Z fmultiply
+. retaddrfm:retfm
+retfm:
+tmpf1s
+zs tmp
+tmp tmpf1s
+tmp
+tmpf1m
+zm tmp
+tmp tmpf1m
+tmp
+tmpf1e
+ze tmp
+tmp tmpf1e
+tmp
+
+
+## tmpf1 = floatdiv(0.5, tmpf1)
+# call float div
+pfs tmp
+tmp xxxs
+tmp
+pfm tmp
+tmp xxxm
+tmp
+pfe tmp
+tmp xxxe
+tmp
+tmpf1s tmp
+tmp yyys
+tmp
+tmpf1m tmp
+tmp yyym
+tmp
+tmpf1e tmp
+tmp yyye
+tmp
+fdivret+2
+negretaddr
+retaddrfd negretaddr
+negretaddr fdivret+2
+Z Z fdiv
+. retaddrfd:retfd
+retfd:
+tmpf1s
+zzzs tmp
+tmp tmpf1s
+tmp
+tmpf1m
+zzzm tmp
+tmp tmpf1m
+tmp
+tmpf1e
+zzze tmp
+tmp tmpf1e
+tmp
+
+
+## pi = floatadd(pi, tmpf1)
+# call float add
+pis tmp
+tmp xxs
+tmp
+pim tmp
+tmp xxm
+tmp
+pie tmp
+tmp xxe
+tmp
+tmpf1s tmp
+tmp yys
+tmp
+tmpf1m tmp
+tmp yym
+tmp
+tmpf1e tmp
+tmp yye
+tmp
+faddret+2
+negretaddr
+retaddrfa3 negretaddr
+negretaddr faddret+2
+Z Z fadd
+. retaddrfa3:retfa3
+retfa3:
+pis
+zzs tmp
+tmp pis
+tmp
+pim
+zzm tmp
+tmp pim
+tmp
+pie
+zze tmp
+tmp pie
+tmp
+
+# comment out this line to print pi every iteration
+Z Z skipinterprint
+
+# call print
+pis Z
+Z p
+printret+2
+negretaddr
+retaddris negretaddr
+negretaddr (printret+2)
+Z Z print
+. retaddris:retis
+retis:
+
+# call print
+pim Z
+Z p
+printret+2
+negretaddr
+retaddrim negretaddr
+negretaddr (printret+2)
+Z Z print
+. retaddrim:retim
+retim:
+
+# call print
+pie Z
+Z p
+printret+2
+negretaddr
+retaddrie negretaddr
+negretaddr (printret+2)
+Z Z print
+. retaddrie:retie
+retie:
+ln (-1)
+
+skipinterprint:
+
+# loop conditional
+N ni0 piloop
+
+
+# print final pi
+p_ascii (-1)
+i_ascii (-1)
+colon_ascii (-1)
+ln (-1)
+
+pis Z
+Z p
+printret+2
+negretaddr
+retaddris2 negretaddr
+negretaddr (printret+2)
+Z Z print
+. retaddris2:retis2
+retis2:
+
+# call print
+pim Z
+Z p
+printret+2
+negretaddr
+retaddrim2 negretaddr
+negretaddr (printret+2)
+Z Z print
+. retaddrim2:retim2
+retim2:
+
+# call print
+pie Z
+Z p
+printret+2
+negretaddr
+retaddrie2 negretaddr
+negretaddr (printret+2)
+Z Z print
+. retaddrie2:retie2
+retie2:
+ln (-1)
+
+i i caller0  # restart program and ask for new input prompt
+
+
+##### arithmetic functions #####
+
+### inttofloat ###
+# casts an integer to a float
+# in: i0 an integer
+# out: is,im,ie a float
+# works with negatives too
+#
+# # sample caller
+# i0 tmp
+# tmp iin
+# tmp
+# inttofloatret+2
+# negretaddr
+# retaddritf negretaddr
+# negretaddr inttofloatret+2
+# Z Z inttofloat
+# . retaddritf:retitf
+# retitf:
+#
+
+inttofloat:
+is
+im
+ie
+
+# find sign and filter 0
+Z iin LEi
+Z Z Gi
+LEi:
+iin Z Ei
+Z
+# Li
+# set sign bit
+N is
+# flip sign
+iin tmp
+tmp Z
+iin
+Z iin
+tmp
+Z
+# fall through
+
+Gi:
+nonefifty ie
+N iin
+two24 iin goleft
+
+# go right
+# guaranteed at least one rightshift needed
+P iin
+ntwo24 iin
+iin tmp  # tmp = -iin
+
+shamt
+
+# find shamt
+N shamt
+ntwo25 tmp shift25
+tmp tmp shamtfound  # iin < 2^25
+shift25:  # iin >= 2^25
+N shamt
+ntwo25 tmp shift26  # ntwo25 + ntwo25 = ntwo26 and so on up
+tmp tmp shamtfound  # iin < 2^26
+shift26:  # iin >= 2^26
+N shamt
+ntwo26 tmp shift27
+tmp tmp shamtfound
+shift27:
+N shamt
+ntwo27 tmp shift28
+tmp tmp shamtfound
+shift28:
+N shamt
+ntwo28 tmp shift29
+tmp tmp shamtfound
+shift29:
+N shamt
+ntwo29 tmp shift30
+tmp tmp shamtfound
+shift30:
+N shamt
+tmp
+
+shamtfound:
+# ncopy shamt calculated above into nshamt
+s
+iin s
+nshamt
+shamt nshamt
+nshamt ie
+nshiftaddr+2
+retaddritfsh nshiftaddr+2
+sh sh rightshift
+. retaddritfsh:retitfsh
+retitfsh:
+sh tmp
+tmp im
+tmp
+
+# now check if we needed to round
+# by left shifting the result back
+# and comparing to 1<<(one less than shamt)
+P tmp
+P shamt extradouble
+doubleit:
+sh Z
+Z sh
+Z
+tmp Z
+Z tmp
+Z
+P shamt extradouble
+Z Z doubleit
+extradouble:
+sh Z
+Z sh
+Z
+
+iin sh
+tmp sh roundup
+doneroundup:
+Z
+tmp tmp inttofloatret
+
+roundup:
+tmp
+N im
+two24 im norsh
+ntwo24 im
+# rightshift if too big
+s
+im s
+shamt
+nshamt
+N shamt
+shamt nshamt
+N ie
+nshiftaddr+2
+retaddritfsh2 nshiftaddr+2
+sh sh rightshift
+. retaddritfsh2:retitfsh2
+retitfsh2:
+im
+sh Z
+Z im
+Z Z doneroundup
+
+norsh:
+# no rightshift
+ntwo24 im
+Z Z doneroundup
+
+goleft:
+ntwo23 iin moreleft
+# if not then true iin does not need shift
+P iin
+ntwo23 iin
+iin tmp
+tmp im
+tmp tmp inttofloatret
+
+moreleft:
+P iin
+ntwo23 iin
+# iin is corrected now
+iin tmp
+tmp iin  # iin *= 2
+tmp
+P ie
+# keep leftshifting until >=2^23
+N iin
+two23 iin moreleft
+P iin
+ntwo23 iin
+iin tmp
+tmp im
+tmp
+
+Ei:
+# iin==0 return all 0's
+inttofloatret:
+iin iin 0
+
+
+
+### float div ###
+# in: xxxs,xxxm,xxxe and yyys,yyym,yyye
+# out: zzzs,zzzm,zzze
+#
+# uses https://en.wikipedia.org/wiki/Division_algorithm#Newton–Raphson_division
+# the link might not work because of the en dash
+#
+# # sample caller
+# i0 tmp
+# tmp xxxs
+# tmp
+# i1 tmp
+# tmp xxxm
+# tmp
+# i2 tmp
+# tmp xxxe
+# tmp
+# i3 tmp
+# tmp yyys
+# tmp
+# i4 tmp
+# tmp yyym
+# tmp
+# i5 tmp
+# tmp yyye
+# tmp
+# fdivret+2
+# negretaddr
+# retaddrsample negretaddr
+# negretaddr fdivret+2
+# Z Z fdiv
+# . retaddrsample:retsample
+# retsample:
+#
+
+fdiv:
+zzzs
+zzzm
+zzze
+rs
+rm
+re
+
+# algorithm:
+# D' := (0, xxxm, 127) i.e. 1.m
+# RECIP = FEOS - (TEOS * D')
+# RECIP += (RECIP * (ONE - (D' * RECIP)))
+# RECIP += (RECIP * (ONE - (D' * RECIP)))
+# RECIP += (RECIP * (ONE - (D' * RECIP)))
+# return RECIP * (yyys,yyym,yyye-xxxe+127) | xxxs
+
+# prepare D'
+# use exponent 126
+ndm
+yyym ndm
+
+
+## call float mult
+# zs,zm,ze = TEOS * D'
+# xs=0
+nteosm xm
+nteose xe
+# ys=0
+ndm ym
+nonee ye
+P ye
+fmultret+2
+negretaddr
+retaddrfd0 negretaddr
+negretaddr fmultret+2
+Z Z fmultiply
+. retaddrfd0:retfd0
+retfd0:
+
+
+## call float add
+# RECIP -= -FEOS + (zs,zm,ze)
+N xxs
+nfeosm xxm
+nfeose xxe
+zs tmp
+tmp yys
+tmp
+zm tmp
+tmp yym
+tmp
+ze tmp
+tmp yye
+tmp
+faddret+2
+negretaddr
+retaddrfd1 negretaddr
+negretaddr faddret+2
+Z Z fadd
+. retaddrfd1:retfd1
+retfd1:
+N rs
+zzs rs #flip sign
+zzm tmp
+tmp rm
+tmp
+zze tmp
+tmp re
+tmp
+
+
+# RECIP += (RECIP * (ONE - (D' * RECIP)))
+countt
+c3 countt # using c3 instead of c2, i.e. another iteration, helps with accuracy
+iters:
+
+
+## call float mult
+# zs,zm,ze = RECIP * -D'
+rs tmp
+tmp xs
+tmp
+rm tmp
+tmp xm
+tmp
+re tmp
+tmp xe
+tmp
+N ys
+ndm ym
+nonee ye
+P ye
+fmultret+2
+negretaddr
+retaddrfd2 negretaddr
+negretaddr fmultret+2
+Z Z fmultiply
+. retaddrfd2:retfd2
+retfd2:
+
+
+## call float add
+# zzs,zzm,zze = ONE + (zs,zm,ze)
+# xxs = 0
+nonem xxm
+nonee xxe
+zs tmp
+tmp yys
+tmp
+zm tmp
+tmp yym
+tmp
+ze tmp
+tmp yye
+tmp
+faddret+2
+negretaddr
+retaddrfd3 negretaddr
+negretaddr faddret+2
+Z Z fadd
+. retaddrfd3:retfd3
+retfd3:
+
+
+## call float mult
+# zs,zm,ze = RECIP * zzs,zzm,zze
+rs tmp
+tmp xs
+tmp
+rm tmp
+tmp xm
+tmp
+re tmp
+tmp xe
+tmp
+zzs tmp
+tmp ys
+tmp
+zzm tmp
+tmp ym
+tmp
+zze tmp
+tmp ye
+tmp
+fmultret+2
+negretaddr
+retaddrfd4 negretaddr
+negretaddr fmultret+2
+Z Z fmultiply
+. retaddrfd4:retfd4
+retfd4:
+
+
+## call float add
+# RECIP = RECIP + (zs,zm,ze)
+rs tmp
+tmp xxs
+tmp
+rm tmp
+tmp xxm
+tmp
+re tmp
+tmp xxe
+tmp
+zs tmp
+tmp yys
+tmp
+zm tmp
+tmp yym
+tmp
+ze tmp
+tmp yye
+tmp
+faddret+2
+negretaddr
+retaddrfd5 negretaddr
+negretaddr faddret+2
+Z Z fadd
+. retaddrfd5:retfd5
+retfd5:
+rs
+rm
+re
+zzs tmp
+tmp rs
+tmp
+zzm tmp
+tmp rm
+tmp
+zze tmp
+tmp re
+tmp
+
+N countt iters
+
+
+# multiply by N'
+
+## call float mult
+# zs,zm,ze = RECIP * N' * (-1)^yyys
+yyys tmp
+tmp xs
+tmp
+rm tmp
+tmp xm
+tmp
+re tmp
+tmp xe
+tmp
+xxxs tmp
+tmp ys
+tmp
+xxxm tmp
+tmp ym
+tmp
+nonee ye
+fmultret+2
+negretaddr
+retaddrfd6 negretaddr
+negretaddr fmultret+2
+Z Z fmultiply
+. retaddrfd6:retfd6
+retfd6:
+
+zs tmp
+tmp zzzs
+tmp
+zm tmp
+tmp zzzm
+tmp
+ze tmp
+tmp zzze
+tmp
+
+# fix exponent
+P zzze
+xxxe yyye
+yyye zzze
+tmp
+
+# return
+fdivexit:
+xxxs
+xxxm
+xxxe
+yyys
+yyym
+yyye
+fdivret:
+Z Z 0
+
+
+
+### float add/sub ###
+# in: xxs,xxm,xxe and yys,yym,yye
+# out: zzs,zzm,zze
+# 
+# swaps so x>y
+# rightshifts y
+# adds/subs the mantissas
+# fixes mantissa alignment so 2^23 is largest bit
+#
+# # sample caller
+# i0 tmp
+# tmp xxs
+# tmp
+# i1 tmp
+# tmp xxm
+# tmp
+# i2 tmp
+# tmp xxe
+# tmp
+# i3 tmp
+# tmp yys
+# tmp
+# i4 tmp
+# tmp yym
+# tmp
+# i5 tmp
+# tmp yye
+# tmp
+# faddret+2
+# negretaddr
+# retaddrsample negretaddr
+# negretaddr faddret+2
+# Z Z fadd
+# . retaddrsample:retsample
+# retsample:
+#
+
+fadd:
+zzs
+zzm
+zze
+
+
+# no swap if (yye-=xxe) <= 0
+xxe yye noswap
+
+# swap
+yye tmp  # tmp = -Y+X
+tmp xxe
+yye
+tmp Z
+Z yye
+tmp
+Z
+
+xxs Z
+yys tmp
+xxs
+yys
+Z yys
+tmp xxs
+tmp
+Z
+
+xxm Z
+yym tmp
+xxm
+yym
+Z yym retx
+tmp xxm rety
+tmp
+Z Z noswap
+
+# y is zero return x
+retx:
+# remember, the new xxm is still sitting in -tmp
+tmp xxm
+tmp
+retxx:
+Z
+xxm Z
+Z zzm
+Z
+xxs Z
+Z zzs
+Z
+xxe Z
+Z zze
+Z Z faddexit
+
+rety:
+Z
+yym Z
+Z zzm
+Z
+yys Z
+Z zzs
+Z
+yye Z
+xxe Z
+Z zze 
+Z Z faddexit
+
+noswap:
+Z
+tmp
+Z yym retxx
+tmp xxm rety
+
+# skip the shift if xe == ye
+yye tmp noshiftcheckswap #noshift
+tmp tmp shift
+
+noshiftcheckswap:
+tmp
+yym Z
+Z tmp
+xxm tmp endcheckswap
+# swap
+tmp yym
+xxm
+Z xxm
+Z
+tmp
+xxs Z
+yys tmp
+xxs
+yys
+Z yys
+tmp xxs
+Z
+endcheckswap:
+tmp tmp noshift
+
+shift:
+# if the exponent difference is big, zero yym
+yye tmp
+c24 tmp actualshift
+yym
+tmp tmp noshift #i.e. continue
+
+actualshift:
+tmp
+#rightshift by -(yye-xxe), which is -yye right now
+s
+shamt
+nshamt
+yym s
+yye shamt
+shamt nshamt
+nshiftaddr+2
+retfa0addr nshiftaddr+2
+sh sh maxbit23
+. retfa0addr:retfa0
+retfa0:
+yym
+sh tmp
+tmp yym
+noshift:
+tmp
+xxe tmp
+tmp zze
+tmp
+
+Z
+
+
+# add/sub time!
+xxs yys lq
+nq:
+# xxs != yys
+yym zzm
+xxm tmp
+tmp zzm
+tmp
+xxs tmp
+tmp zzs
+tmp tmp cntt
+
+lq:
+N yys nq
+# xxs == yys
+yym tmp
+xxm tmp
+tmp zzm
+tmp
+xxs tmp
+tmp zzs
+tmp
+
+cntt:
+Z zzm faddreszeroexit
+
+notzero:
+Z
+tmp
+
+# test: leftsh if zm <= 2^23 - 1
+N zzm
+two23 zzm leftsh
+#noleftsh.
+# no rightsh if zm <= 2^24 - 1
+two23 zzm norightsh  # equivalent to P zm; ntwo23 zm; N zm; two24 zm faddexit
+ntwo24 zzm
+P zzm
+
+# rightsh
+s
+shamt
+nshamt
+zzm s
+N shamt
+shamt nshamt
+nshiftaddr+2
+retfa1addr nshiftaddr+2
+sh sh maxbit25
+. retfa1addr:retfa1
+retfa1:
+zzm
+sh tmp
+tmp zzm
+N zze
+tmp tmp faddexit
+
+leftsh:
+P zzm
+ntwo23 zzm
+zzm tmp
+tmp zzm
+P zze
+tmp tmp notzero
+
+faddreszeroexit:
+zzs
+zze zze faddexit
+
+norightsh:
+P zzm
+ntwo24 zzm
+faddexit:
+xxs
+xxm
+xxe
+yys
+yym
+yye
+faddret:
+Z Z 0
+
+
+
+### float multiply ###
+# in: xs,xm,xe and ys,ym,ye
+# out: zs,zm,ze
+#
+# uses one iteration of the Karatsuba Algorithm to avoid overflow
+# then leverages the int multiply
+#
+# TODO: fix rounding when z1, z0 are rightshifted
+#       ideally without having to do more rightshifts :P
+# 
+# # sample caller
+# i0 tmp
+# tmp xs
+# tmp
+# i1 tmp
+# tmp xm
+# tmp
+# i2 tmp
+# tmp xe
+# tmp
+# i3 tmp
+# tmp ys
+# tmp
+# i4 tmp
+# tmp ym
+# tmp
+# i5 tmp
+# tmp ye
+# tmp
+# fmultret+2
+# negretaddr
+# retaddrsample negretaddr
+# negretaddr fmultret+2
+# Z Z fmultiply
+# . retaddrsample:retsample
+# retsample:
+#
+
+fmultiply:
+zs; zm; ze; z2; z1; z0; x1; x0; y1; y0; nzm
+
+## Karatsuba
+# xm,ym are 24 bits
+# xm = x1 *2^12 + x0
+# ym = y1 *2^12 + x0
+# z2 := x1*y1
+# z1 := x1*y0 + x0*y1
+# z0 := x0*y0
+# though to minimize calculations, one actually does
+# z1 := (x1-x0)*(y1-y0) + z2 + z0
+# and then
+# xy = z2 *2^24 + z1 *2^12 + z0
+# though with shift adjustments and exponent stuff and the like
+
+## x1 = xm >> 12
+s
+shamt
+nshamt
+xm s
+c12
+nc12 c12
+c12 nshamt
+nshamt shamt
+nshiftaddr+2
+retfm0addr nshiftaddr+2
+sh sh maxbit23
+retfm0:
+sh tmp
+tmp x1
+# tmp is -x1 right now
+
+## x0 = xm - (x1 << 12)
+# Z = -8 * tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+tmp
+
+# tmp = -8 * Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+Z
+
+# Z = -8 * tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+tmp
+
+# tmp = -8 * Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+Z
+# tmp = - (x1 << 12)
+xm Z  # Z = -xm
+tmp Z # Z = -xm + (x1 << 12)
+Z x0
+tmp
+Z
+
+
+## y1 = ym >> 12
+s
+shamt
+nshamt
+ym s
+nc12 shamt
+shamt nshamt
+nshiftaddr+2
+retfm1addr nshiftaddr+2
+sh sh maxbit23
+retfm1:
+sh tmp
+tmp y1
+# tmp is -y1 right now
+
+## y0 = ym - (y1 << 12)
+# Z = -8 * tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+tmp
+
+# tmp = -8 * Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+Z
+
+# Z = -8 * tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+tmp
+
+# tmp = -8 * Z
+Z tmp
+tmp Z
+Z tmp
+tmp Z
+Z tmp
+Z
+# tmp = - (y1 << 12)
+ym Z  # Z = -ym
+tmp Z # Z = -ym + (y1 << 12)
+Z y0
+tmp
+Z
+
+
+# call mult
+x1 ax
+y1 bx
+mulret+2
+negretaddr
+retfm2addr negretaddr
+negretaddr (mulret+2)
+Z Z multiply
+retfm2:
+res z2
+
+
+# call mult
+x0 ax
+y0 bx
+mulret+2
+negretaddr
+retfm6addr negretaddr
+negretaddr (mulret+2)
+Z Z multiply
+retfm6:
+res z0
+
+
+# z1 = x0*y1 + y1*x0
+#    = z2 + z0 - (x1-x0)*(y1-y0)
+z0 tmp
+z2 tmp
+tmp z1
+tmp
+# call mult
+x0 x1
+y0 y1
+x1 ax
+y1 bx
+mulret+2
+negretaddr
+retfm4addr negretaddr
+negretaddr (mulret+2)
+Z Z multiply
+retfm4:
+tmp
+res tmp
+tmp z1
+tmp
+Z
+
+# if z2 <= 2^23-1, leftshift all the z#'s
+N z2
+two23 z2 xtra
+P z2
+ntwo23 z2
+Z Z noxtra
+
+xtra:
+P z2
+ntwo23 z2
+tmp
+z2 tmp
+tmp z2  # z2*=2
+tmp
+z1 tmp
+tmp z1  # z1*=2
+tmp
+z0 tmp
+tmp z0  # z0*=2
+tmp
+P ze    # ze++
+
+noxtra:
+z2 nzm
+
+# call rightshift
+s
+shamt
+nshamt
+z1 s
+nc12 shamt
+shamt nshamt
+nshiftaddr+2
+retfm3addr nshiftaddr+2
+sh sh maxbit24
+
+retfm3:
+sh nzm
+
+# call rightshift
+s
+shamt
+nshamt
+z0 s
+c24
+nc24 c24
+c24 nshamt
+nshamt shamt
+nshiftaddr+2
+retfm5addr nshiftaddr+2
+sh sh maxbit24
+
+retfm5:
+sh nzm
+nzm zm
+
+
+# calculate exponent
+tmp
+xe tmp
+ye tmp
+tmp ze
+onetwosix ze
+tmp
+
+# calculate sign
+Z xs skip0
+N zs
+skip0:
+Z ys skip1
+Z zs skip2
+zs zs skip1
+skip2:
+N zs
+skip1:
+
+# fix the mantissa so the top bit is 2^23
+N zm
+two24 zm skiprights # branch if zm <= 2^24 -1
+ntwo24 zm
+P zm
+s
+shamt
+nshamt
+zm s
+P nshamt
+nshamt shamt
+nshiftaddr+2
+retaddr08 nshiftaddr+2
+sh sh maxbit25
+. retaddr08:ret08
+ret08:
+zm
+sh tmp
+tmp zm
+N ze
+tmp tmp fmultdone
+
+skiprights:
+ntwo23 zm lefts  # zm is now zm_actual -2^23 +1
+ntwo23 zm
+P zm
+tmp tmp fmultdone
+lefts:
+ntwo23 zm
+P zm
+zm tmp
+tmp zm
+tmp
+P ze
+
+fmultdone:
+xs
+xm
+xe
+ys
+ym
+ye
+fmultret:
+Z Z 0
+
+
+
+### rightshift ###
+#  shift -s by shamt (the comparisons are easier this way)
+#  returns in sh
+#  s <= 0
+#  constructs sh bit by bit left to right
+#
+#  calling "rightshift" will shift any number
+#  calling "maxbit24" or the like will assume the number has a max bit at 2^24
+#  so if the max possible bit is known, this will make shifting faster
+#  possible-TODO:combine all the subfunctions into one, probably need pointers
+#
+#  note that shorter shifts take longer.
+#
+#  TODO:deprecate nshamt
+#  TODO:returning the remainder (the bits shifted out) could be useful
+#
+# # sample caller
+# s
+# shamt
+# nshamt
+# i4 s
+# i5 nshamt
+# nshamt shamt
+# nshiftaddr+2
+# retaddrsample nshiftaddr+2
+# sh sh rightshift
+# .retaddrsample:retsample
+# retsample:
+#
+
+rightshift:
+# consider checking for shamt>=31 and zeroing sh
+
+maxbit30:
+ntwo30 s j30  # compare -s to 2^30
+two30 s n30  # s<2^23 so just restore s
+j30:
+N sh  # s>=2^23 so increment sh
+n30:
+shamt c30 shiftdone30  # alt implementation idea is to destructively decrement shamt to count this
+c30
+nc30 c30  # reset constant 30
+sh tmp
+tmp sh  # sh*=2
+tmp tmp maxbit29
+shiftdone30:
+c30
+nc30 c30  #reset constant 30
+tmp tmp shiftdone
+
+maxbit29:
+ntwo29 s j29
+two29 s n29
+j29:
+N sh
+n29:
+shamt c29 shiftdone29
+c29
+nc29 c29
+sh tmp
+tmp sh
+tmp tmp maxbit28
+shiftdone29:
+c29
+nc29 c29
+tmp tmp shiftdone
+
+maxbit28:
+ntwo28 s j28
+two28 s n28
+j28:
+N sh
+n28:
+shamt c28 shiftdone28
+c28
+nc28 c28
+sh tmp
+tmp sh
+tmp tmp maxbit27
+shiftdone28:
+c28
+nc28 c28
+tmp tmp shiftdone
+
+maxbit27:
+ntwo27 s j27
+two27 s n27
+j27:
+N sh
+n27:
+shamt c27 shiftdone27
+c27
+nc27 c27
+sh tmp
+tmp sh
+tmp tmp maxbit26
+shiftdone27:
+c27
+nc27 c27
+tmp tmp shiftdone
+
+maxbit26:
+ntwo26 s j26
+two26 s n26
+j26:
+N sh
+n26:
+shamt c26 shiftdone26
+c26
+nc26 c26
+sh tmp
+tmp sh
+tmp tmp maxbit25
+shiftdone26:
+c26
+nc26 c26
+tmp tmp shiftdone
+
+maxbit25:
+ntwo25 s j25
+two25 s n25
+j25:
+N sh
+n25:
+shamt c25 shiftdone25
+c25
+nc25 c25
+sh tmp
+tmp sh
+tmp tmp maxbit24
+shiftdone25:
+c25
+nc25 c25
+tmp tmp shiftdone
+
+maxbit24:
+ntwo24 s j24
+two24 s n24
+j24:
+N sh
+n24:
+shamt c24 shiftdone24
+c24
+nc24 c24
+sh tmp
+tmp sh
+tmp tmp maxbit23
+shiftdone24:
+c24
+nc24 c24
+tmp tmp shiftdone
+
+maxbit23:
+ntwo23 s j23
+two23 s n23
+j23:
+N sh
+n23:
+shamt c23 shiftdone23
+c23
+nc23 c23
+sh tmp
+tmp sh
+tmp tmp maxbit22
+shiftdone23:
+c23
+nc23 c23
+tmp tmp shiftdone
+
+maxbit22:
+ntwo22 s j22
+two22 s n22
+j22:
+N sh
+n22:
+shamt c22 shiftdone22
+c22
+nc22 c22
+sh tmp
+tmp sh
+tmp tmp maxbit21
+shiftdone22:
+c22
+nc22 c22
+tmp tmp shiftdone
+
+maxbit21:
+ntwo21 s j21
+two21 s n21
+j21:
+N sh
+n21:
+shamt c21 shiftdone21
+c21
+nc21 c21
+sh tmp
+tmp sh
+tmp tmp maxbit20
+shiftdone21:
+c21
+nc21 c21
+tmp tmp shiftdone
+
+maxbit20:
+ntwo20 s j20
+two20 s n20
+j20:
+N sh
+n20:
+shamt c20 shiftdone20
+c20
+nc20 c20
+sh tmp
+tmp sh
+tmp tmp maxbit19
+shiftdone20:
+c20
+nc20 c20
+tmp tmp shiftdone
+
+maxbit19:
+ntwo19 s j19
+two19 s n19
+j19:
+N sh
+n19:
+shamt c19 shiftdone19
+c19
+nc19 c19
+sh tmp
+tmp sh
+tmp tmp maxbit18
+shiftdone19:
+c19
+nc19 c19
+tmp tmp shiftdone
+
+maxbit18:
+ntwo18 s j18
+two18 s n18
+j18:
+N sh
+n18:
+shamt c18 shiftdone18
+c18
+nc18 c18
+sh tmp
+tmp sh
+tmp tmp maxbit17
+shiftdone18:
+c18
+nc18 c18
+tmp tmp shiftdone
+
+maxbit17:
+ntwo17 s j17
+two17 s n17
+j17:
+N sh
+n17:
+shamt c17 shiftdone17
+c17
+nc17 c17
+sh tmp
+tmp sh
+tmp tmp maxbit16
+shiftdone17:
+c17
+nc17 c17
+tmp tmp shiftdone
+
+maxbit16:
+ntwo16 s j16
+two16 s n16
+j16:
+N sh
+n16:
+shamt c16 shiftdone16
+c16
+nc16 c16
+sh tmp
+tmp sh
+tmp tmp maxbit15
+shiftdone16:
+c16
+nc16 c16
+tmp tmp shiftdone
+
+maxbit15:
+ntwo15 s j15
+two15 s n15
+j15:
+N sh
+n15:
+shamt c15 shiftdone15
+c15
+nc15 c15
+sh tmp
+tmp sh
+tmp tmp maxbit14
+shiftdone15:
+c15
+nc15 c15
+tmp tmp shiftdone
+
+maxbit14:
+ntwo14 s j14
+two14 s n14
+j14:
+N sh
+n14:
+shamt c14 shiftdone14
+c14
+nc14 c14
+sh tmp
+tmp sh
+tmp tmp maxbit13
+shiftdone14:
+c14
+nc14 c14
+tmp tmp shiftdone
+
+maxbit13:
+ntwo13 s j13
+two13 s n13
+j13:
+N sh
+n13:
+shamt c13 shiftdone13
+c13
+nc13 c13
+sh tmp
+tmp sh
+tmp tmp maxbit12
+shiftdone13:
+c13
+nc13 c13
+tmp tmp shiftdone
+
+maxbit12:
+ntwo12 s j12
+two12 s n12
+j12:
+N sh
+n12:
+shamt c12 shiftdone12
+c12
+nc12 c12
+sh tmp
+tmp sh
+tmp tmp maxbit11
+shiftdone12:
+c12
+nc12 c12
+tmp tmp shiftdone
+
+maxbit11:
+ntwo11 s j11
+two11 s n11
+j11:
+N sh
+n11:
+shamt c11 shiftdone11
+c11
+nc11 c11
+sh tmp
+tmp sh
+tmp tmp maxbit10
+shiftdone11:
+c11
+nc11 c11
+tmp tmp shiftdone
+
+maxbit10:
+ntwo10 s j10
+two10 s n10
+j10:
+N sh
+n10:
+shamt c10 shiftdone10
+c10
+nc10 c10
+sh tmp
+tmp sh
+tmp tmp maxbit9
+shiftdone10:
+c10
+nc10 c10
+tmp tmp shiftdone
+
+maxbit9:
+ntwo9 s j9
+two9 s n9
+j9:
+N sh
+n9:
+shamt c9 shiftdone9
+c9
+nc9 c9
+sh tmp
+tmp sh
+tmp tmp maxbit8
+shiftdone9:
+c9
+nc9 c9
+tmp tmp shiftdone
+
+maxbit8:
+ntwo8 s j8
+two8 s n8
+j8:
+N sh
+n8:
+shamt c8 shiftdone8
+c8
+nc8 c8
+sh tmp
+tmp sh
+tmp tmp maxbit7
+shiftdone8:
+c8
+nc8 c8
+tmp tmp shiftdone
+
+maxbit7:
+ntwo7 s j7
+two7 s n7
+j7:
+N sh
+n7:
+shamt c7 shiftdone7
+c7
+nc7 c7
+sh tmp
+tmp sh
+tmp tmp maxbit6
+shiftdone7:
+c7
+nc7 c7
+tmp tmp shiftdone
+
+maxbit6:
+ntwo6 s j6
+two6 s n6
+j6:
+N sh
+n6:
+shamt c6 shiftdone6
+c6
+nc6 c6
+sh tmp
+tmp sh
+tmp tmp maxbit5
+shiftdone6:
+c6
+nc6 c6
+tmp tmp shiftdone
+
+maxbit5:
+ntwo5 s j5
+two5 s n5
+j5:
+N sh
+n5:
+shamt c5 shiftdone5
+c5
+nc5 c5
+sh tmp
+tmp sh
+tmp tmp maxbit4
+shiftdone5:
+c5
+nc5 c5
+tmp tmp shiftdone
+
+maxbit4:
+ntwo4 s j4
+two4 s n4
+j4:
+N sh
+n4:
+shamt c4 shiftdone4
+c4
+nc4 c4
+sh tmp
+tmp sh
+tmp tmp maxbit3
+shiftdone4:
+c4
+nc4 c4
+tmp tmp shiftdone
+
+maxbit3:
+ntwo3 s j3
+two3 s n3
+j3:
+N sh
+n3:
+shamt c3 shiftdone3
+c3
+nc3 c3
+sh tmp
+tmp sh
+tmp tmp maxbit2
+shiftdone3:
+c3
+nc3 c3
+tmp tmp shiftdone
+
+maxbit2:
+ntwo2 s j2
+two2 s n2
+j2:
+N sh
+n2:
+shamt c2 shiftdone2
+c2
+nc2 c2
+sh tmp
+tmp sh
+tmp tmp maxbit1
+shiftdone2:
+c2
+nc2 c2
+tmp tmp shiftdone
+
+maxbit1:
+ntwo1 s j1
+two1 s
+c1 c1 n1
+j1:
+N sh
+c1
+n1:
+nc1 c1
+shamt c1 shiftdone
+sh tmp
+tmp sh
+tmp
+
+shiftdone:  # return
+shiftdone+8
+nshiftaddr+2 shiftdone+8
+tmp tmp 0
+
+# variable nshiftaddr+2
+nshiftaddr:
+Z Z 0
+
+
+
+### integer multiplication ###
+# in:  ax, bx of any sign
+# out: res
+#
+# algorithm inspired by https://hackaday.io/project/25583-simple-compiler
+# specifically OpCode2Subleq.c
+# works by shifting ax to the left to test its bits
+# and adding bx to res whenever a bit of ax is set
+# then leftshifting res each time so the added bx
+# is multiplied by the right power of 2 from each bit of ax
+# 
+# # sample caller
+# i2 ax
+# i3 bx
+# mulret+2
+# negretaddr
+# retaddrsample negretaddr
+# negretaddr (mulret+2)
+# Z Z multiply
+# . retaddrsample:retsample
+# retsample:
+#
+
+multiply:
+sig    # sign
+res    # product
+negres # negative of product
+word
+thirty word # word = -30
+
+# flip signs as needed
+Z ax flipa
+flipped:
+mulloop:
+tmp
+
+Z
+negres Z
+Z negres  # -res *= 2
+Z
+
+top ax  # top is largest 30-bit number 2^30-1
+Z ax small
+
+# 31st bit is set
+# subtract one more to subtract 2^30
+P ax
+# add bx to the result at this bit
+bx negres
+Z Z next
+
+small:
+# 31st bit is not set
+ntop ax  # restore ax
+Z
+
+next: 
+ax Z
+Z ax  # ax *= 2
+Z
+
+N word mulloop
+
+# determine signs
+Z
+Z sig unsigned
+negres res
+Z Z mulexit
+unsigned:
+negres tmp
+tmp res
+tmp
+Z Z mulexit
+
+# flipping sign of a
+flipa:
+Z
+Z sig postoneg
+sig sig cont
+postoneg:
+N sig
+cont:
+ax Z mulexit # if ax=0 return 0 immediately
+Z tmp
+ax
+tmp ax
+tmp
+Z Z flipped
+
+mulexit:
+ax
+mulret:
+bx bx 0 #return
+
+
+
+### print ###
+# prints p as hex
+# bypassing hsq's ascii
+# can print negatives
+#
+# # sample caller
+# sample tmp
+# tmp p
+# tmp
+# printret+2
+# negretaddr
+# retaddrsample negretaddr
+# negretaddr (printret+2)
+# Z Z print
+# . retaddrsample:retsample
+# retsample:
+#
+
+print:
+# check if p is negative
+Z p ?+3
+Z Z GGG
+p Z EEE
+Z
+# if negative, print neg and flip sign
+negsign (-1)
+p Z
+Z tmp
+p
+tmp p
+
+GGG:
+EEE:
+# set counter for 8 times i.e. 8 hex digits
+count
+seven count
+nib7
+nibfixed nib7 # nib7 = 0x1000'0000
+
+iter:
+# divide p by shrinking powers of 16
+# this could be reimplemented with rightshift for speed
+p a
+nib7 b
+divret+2
+negretaddr
+retprintdiv0addr negretaddr
+negretaddr (divret+2)
+Z Z divide
+
+retprintdiv0:
+tmp
+q tmp
+noff tmp  # for ascii offset
+
+# for abcdef in ascii, add an extra offset
+nine_ascii tmp
+Z tmp ?+3
+Z Z GGGG
+tmp Z EEEE
+Z Z LLLL
+GGGG:
+nletoff tmp
+EEEE:
+LLLL:
+nnine_ascii tmp
+
+# print!!
+tmp (-1)
+tmp
+
+# remainder is rest of digits to the right of the current
+p
+r p
+
+# divide current power of 16 by 16
+nib7 a
+sixteen b
+divret+2
+negretaddr
+retprintdiv1addr negretaddr
+negretaddr (divret+2)
+Z Z divide # could be reimplemented with rightshift
+
+retprintdiv1:
+# replace nib7
+nib7
+q nib7
+q
+
+N count iter # count++
+
+ln (-1)
+
+printret:
+p p 0 #return
+
+
+
+### integer division ###
+# in:  a <= 0, b < 0
+# out: q <= 0, -b < r <= 0
+# note that output is negative of actual.
+# a = (-q)*b + (-r) with 0 <= -r < b
+#
+# adapted from divMod from http://mazonka.com/st/lcss.pdf
+#
+# # sample caller
+# i0 a
+# i1 b
+# divret+2
+# negretaddr
+# retaddrsample negretaddr
+# negretaddr (divret+2)
+# Z Z divide
+# . retaddrsample:retsample
+# retsample:
+# q quotientvar
+# r remaindervar
+
+divide:
+q
+r
+
+# start with a in the remainder
+nega
+a nega
+nega r
+
+div:
+Z # this Z is needed from a comparison below
+
+# subtract b from a
+# stop if b <= a
+b a nontriv
+
+exit:
+a
+divret:
+b b 0 #return
+
+nontriv:
+# find 2^# * b that goes into a
+
+# initiate bi = b
+bi
+negb
+b negb
+negb bi
+
+# initiate i = 1
+ii
+N ii
+
+loop:
+# try subtracting bi from r
+bi r stay  # r-=bi
+fall:
+negbi
+bi negbi
+negbi r  # r+=bi
+b r keepdiving  # r-=b
+
+# done
+negb
+b negb
+negb r # r+=b
+negb negb exit
+
+keepdiving:
+negb
+b negb
+negb r
+negb negb div
+
+stay:
+# increment quotient
+ii q
+# i*=2
+ii Z
+Z ii
+Z
+
+bi Z div # test 
+Z bi  # bi*=2
+Z Z loop
+
+
+
+### input ###
+# places a 32-bit integer hex input from command line into i
+# use lower-case abcdef for hex
+# takes negative numbers by adding a hyphen
+#
+# # sample caller:
+# i
+# inret+2
+# negretaddr
+# retinsampleaddr negretaddr
+# negretaddr inret+2
+# Z Z input
+# . retinsampleaddr:retinsample
+# retinsample:
+# i tmp
+# tmp sample
+# tmp
+
+input:
+i    # place input value here
+neg  # whether input is negative
+
+# print prompt
+i_ascii (-1)
+n_ascii (-1)
+colon_ascii (-1)
+nextin:
+in
+(-1) in (-1)
+
+# check if it is a line return
+ln in
+Z in ?+3
+Z Z G
+in Z E
+Z Z L
+
+# non line returns
+G:
+L:
+nln in
+
+# check if it is a negative sign
+negsign in
+Z in ?+3
+Z Z GG
+in Z EE
+Z Z LL
+EE:
+N neg
+tmp tmp nextin
+
+# turn into digit
+GG:
+LL:
+nnegsign in
+off in
+off in skip #for hex
+letoff in
+skip:
+noff in
+
+# add to number
+# multiply previous hex digits by 16
+i Z; Z i; Z
+i Z; Z i; Z
+i Z; Z i; Z
+i Z; Z i; Z
+# add new digit
+in tmp
+tmp i
+tmp tmp nextin
+
+#line return
+E:
+Z neg noflip
+i Z
+Z tmp
+i
+tmp i
+neg
+noflip:
+inret:
+tmp tmp 0
+
+
+
+### data ###
+
+# general
+. tmp:0
+. Z:0
+. P:1
+. N:-1
+
+# input
+. i:0
+. in:0
+. off:48
+. noff:-48
+. letoff:39
+. nletoff:-39
+. ln:10
+. nln:-10
+. p_ascii:112
+. i_ascii:105
+. n_ascii:110
+. colon_ascii:58
+. negsign:45
+. nnegsign:-45
+. neg:0
+
+# function calling
+. negretaddr:0
+
+# division
+. a:0
+. b:0
+. q:0
+. r:0
+. negbi:0
+. nega:0
+. negb:0
+. bi:0
+. ii:0
+
+# multiplication
+. ax:0
+. bx:0
+. sig:0
+. res:0
+. negres:0
+. word:1
+. top:1073741823
+. ntop:-1073741823
+. thirty:30
+
+# print
+. nib7:0
+. nibfixed:-268435456
+. p:0
+. nibaddr:nib7
+. count:0
+. seven:7
+. sixteen:16
+. nine_ascii:57
+. nnine_ascii:-57
+. retprintdiv0addr:retprintdiv0
+. retprintdiv1addr:retprintdiv1
+
+# rightshift
+. s:0
+. sh:0
+. shamt:0
+. nshamt:0
+. two30:1073741824
+. two29:536870912
+. two28:268435456
+. two27:134217728
+. two26:67108864
+. two25:33554432
+. two24:16777216
+. two23:8388608
+. two22:4194304
+. two21:2097152
+. two20:1048576
+. two19:524288
+. two18:262144
+. two17:131072
+. two16:65536
+. two15:32768
+. two14:16384
+. two13:8192
+. two12:4096
+. two11:2048
+. two10:1024
+. two9:512
+. two8:256
+. two7:128
+. two6:64
+. two5:32
+. two4:16
+. two3:8
+. two2:4
+. two1:2
+
+. ntwo30:-1073741824
+. ntwo29:-536870912
+. ntwo28:-268435456
+. ntwo27:-134217728
+. ntwo26:-67108864
+. ntwo25:-33554432
+. ntwo24:-16777216
+. ntwo23:-8388608
+. ntwo22:-4194304
+. ntwo21:-2097152
+. ntwo20:-1048576
+. ntwo19:-524288
+. ntwo18:-262144
+. ntwo17:-131072
+. ntwo16:-65536
+. ntwo15:-32768
+. ntwo14:-16384
+. ntwo13:-8192
+. ntwo12:-4096
+. ntwo11:-2048
+. ntwo10:-1024
+. ntwo9:-512
+. ntwo8:-256
+. ntwo7:-128
+. ntwo6:-64
+. ntwo5:-32
+. ntwo4:-16
+. ntwo3:-8
+. ntwo2:-4
+. ntwo1:-2
+
+. c30:30
+. c29:29
+. c28:28
+. c27:27
+. c26:26
+. c25:25
+. c24:24
+. c23:23
+. c22:22
+. c21:21
+. c20:20
+. c19:19
+. c18:18
+. c17:17
+. c16:16
+. c15:15
+. c14:14
+. c13:13
+. c12:12
+. c11:11
+. c10:10
+. c9:9
+. c8:8
+. c7:7
+. c6:6
+. c5:5
+. c4:4
+. c3:3
+. c2:2
+. c1:1
+
+. nc30:-30
+. nc29:-29
+. nc28:-28
+. nc27:-27
+. nc26:-26
+. nc25:-25
+. nc24:-24
+. nc23:-23
+. nc22:-22
+. nc21:-21
+. nc20:-20
+. nc19:-19
+. nc18:-18
+. nc17:-17
+. nc16:-16
+. nc15:-15
+. nc14:-14
+. nc13:-13
+. nc12:-12
+. nc11:-11
+. nc10:-10
+. nc9:-9
+. nc8:-8
+. nc7:-7
+. nc6:-6
+. nc5:-5
+. nc4:-4
+. nc3:-3
+. nc2:-2
+. nc1:-1
+
+. i0:0
+. ni0:0
+
+# float multiply
+. zs:0
+. zm:0
+. ze:0
+. xs:0
+. xm:0
+. xe:0
+. ys:0
+. ym:0
+. ye:0
+. x0:0
+. x1:0
+. y0:0
+. y1:0
+. z0:0
+. z1:0
+. z2:0
+. onetwosix:126
+. retfm0addr:retfm0
+. retfm1addr:retfm1
+. retfm2addr:retfm2
+. retfm3addr:retfm3
+. retfm4addr:retfm4
+. retfm5addr:retfm5
+. retfm6addr:retfm6
+. nzm:0
+
+. mm:0
+. ee:0
+. rr:0
+
+### float add ###
+. zzs:0
+. zzm:0
+. zze:0
+. xxs:0
+. xxm:0
+. xxe:0
+. yys:0
+. yym:0
+. yye:0
+
+### float div ###
+. zzzs:0
+. zzzm:0
+. zzze:0
+. xxxs:0
+. xxxm:0
+. xxxe:0
+. yyys:0
+. yyym:0
+. yyye:0
+. nfeose:-128
+. nfeosm:-11842741
+. nteose:-127
+. nteosm:-15790321
+. nonee:-127
+. nonem:-8388608
+. tmpf0s:0
+. tmpf0m:0
+. tmpf0e:0
+. rs:0
+. rm:0
+. re:0
+. ndm:0
+. countt:0
+
+### inttofloat ###
+. iin:0
+. is:0
+. im:0
+. ie:0
+. nonefifty:-150
+
+### pi series ###
+. vari:0
+. floatis:0
+. floatim:0
+. floatie:0
+. tmpf1s:0
+. tmpf1m:0
+. tmpf1e:0
+. tmpf2s:0
+. tmpf2m:0
+. tmpf2e:0
+. pis:0
+. pim:0
+. pie:0
+
+# -0.75 ("neg point seven five")
+. npsfs:1
+. npsfm:12582912  #c00000
+. npsfe:126
+# 0.25 ("neg point two five")
+. nptfs:1
+. nptfm:8388608  #800000
+. nptfe:125
+# 0.5 ("point five")
+. pfs:0
+. pfm:8388608  #800000
+. pfe:126
